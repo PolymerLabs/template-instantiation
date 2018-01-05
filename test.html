@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  </head>
+  <body>
+
+  <script type="module">
+    import { Suite } from './node_modules/@0xcda7a/test-runner/lib/suite.js';
+
+    import { templateInstanceSpec } from './lib/template-instance-spec.js';
+    import { templateProcessorSpec } from './lib/template-processor-spec.js';
+    import { defaultTemplateProcessorSpec } from
+        './lib/template-processor/default-template-processor-spec.js';
+    import { templatePartSpec } from './lib/template-part-spec.js';
+    import { nodeTemplatePartSpec } from
+        './lib/template-part/node-template-part-spec.js';
+    import { attributeTemplatePartSpec } from
+        './lib/template-part/attribute-template-part-spec.js';
+    import { templateStringParserSpec } from
+        './lib/template-string-parser-spec.js';
+
+
+    const suite = new Suite([
+      templateInstanceSpec,
+      templateProcessorSpec,
+      defaultTemplateProcessorSpec,
+      templatePartSpec,
+      nodeTemplatePartSpec,
+      attributeTemplatePartSpec,
+      templateStringParserSpec
+    ]);
+
+    suite.run();
+  </script>
+
+</body>
+</html>
