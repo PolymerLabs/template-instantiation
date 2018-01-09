@@ -14,8 +14,10 @@ export abstract class TemplateProcessor {
   createdCallback() {};
 }
 
+const templateRegistry: Map<string, TemplateProcessor> = new Map();
+
 Document.prototype.defineTemplateType =
     function(typeName: string, processor: TemplateProcessor) {
-
+      templateRegistry.set(typeName, processor);
     }
 

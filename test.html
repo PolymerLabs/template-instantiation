@@ -14,21 +14,23 @@
     import { defaultTemplateProcessorSpec } from
         './lib/template-processor/default-template-processor-spec.js';
     import { templatePartSpec } from './lib/template-part-spec.js';
-    import { nodeTemplatePartSpec } from
-        './lib/template-part/node-template-part-spec.js';
     import { attributeTemplatePartSpec } from
         './lib/template-part/attribute-template-part-spec.js';
+    import { nodeTemplatePartSpec } from
+        './lib/template-part/node-template-part-spec.js';
+    import { innerTemplatePartSpec } from
+        './lib/template-part/node-template-part/inner-template-part-spec.js';
     import { templateStringParserSpec } from
         './lib/template-string-parser-spec.js';
-
 
     const suite = new Suite([
       templateInstanceSpec,
       templateProcessorSpec,
       defaultTemplateProcessorSpec,
       templatePartSpec,
-      nodeTemplatePartSpec,
       attributeTemplatePartSpec,
+      nodeTemplatePartSpec,
+      innerTemplatePartSpec,
       templateStringParserSpec
     ]);
 
