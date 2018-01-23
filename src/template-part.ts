@@ -1,49 +1,169 @@
-const nonWhitespaceRe = /\S/;
+import { TemplateAssembly } from './template-assembly.js';
+import { TemplateInstance } from './template-instance.js';
+import {
+  TemplateSentinel,
+  NodeTemplateSentinel,
+  AttributeTemplateSentinel
+} from './template-sentinel.js';
 
-export class TemplatePart {
-  readonly expression: string;
+export abstract class TemplatePart {
+  protected previousValue: any;
 
-  protected valueSetter: ValueSetter;
-  protected fullyTemplatized: boolean;
+  constructor(
+      public templateInstance: TemplateInstance,
+      public sentinel: TemplateSentinel,
+      public node: Node) {}
 
-  protected nodeIsFullyTemplatizable(node: Node): boolean {
-    // TODO(cdata): What if parentNode is null?
-    const { parentNode } = node;
 
-    if (parentNode instanceof TemplateInstance) {
-      return false;
+  get value(): any {
+    return this.previousValue;
+  }
+
+  set value(value: any) {
+    this.previousValue = value;
+  }
+}
+
+export class AttributeTemplatePart extends TemplatePart {
+  constructor(
+      public templateInstance: TemplateInstance,
+      public sentinel: AttributeTemplateSentinel,
+      public node: Node) {
+    super(templateInstance, sentinel, node);
+  }
+
+  get expressions(): string[] {
+    return this.sentinel.expressions;
+  }
+
+  set value(value: any) {
+    if (value == null) {
+      value = [];
+    } else if (!Array.isArray(value)) {
+      value = [value];
     }
 
-    let child = parentNode!.firstChild;
+    const node = this.node as Element;
+    const { sentinel } = this;
+    const { strings, attributeName } = sentinel;
+    const valueFragments = [];
 
-    while (child != null) {
-      if (child !== node) {
-        if (child.nodeType !== Node.TEXT_NODE ||
-            nonWhitespaceRe.test((child as Text).data)) {
-          return false;
-        }
+    for (let i = 0; i < (strings.length - 1); ++i) {
+      valueFragments.push(strings[i]);
+      valueFragments.push(value[i] || '');
+    }
+
+    const attributeValue = valueFragments.join('');
+
+    if (attributeValue != null) {
+      node.setAttribute(attributeName, attributeValue);
+    } else {
+      node.removeAttribute(attributeName);
+    }
+  }
+}
+
+export class NodeTemplatePart extends TemplatePart {
+  protected previousValue: any = null;
+  protected previousPartNodes: Node[] = [];
+
+  nextSibling: Node | null;
+
+  constructor(public templateInstance: TemplateInstance,
+      public sentinel: NodeTemplateSentinel,
+      public node: Node) {
+    super(templateInstance, sentinel, node);
+
+    this.nextSibling = node.nextSibling;
+  }
+
+  get expression() {
+    return this.sentinel.expression;
+  }
+
+  get previousSibling(): Node {
+    return this.node;
+  }
+
+  get parentNode(): Node | null {
+    return this.node.parentNode;
+  }
+
+  set value(value: any) {
+    if (value === null ||
+        !(typeof value === 'object' || typeof value === 'function')) {
+      // Handle primitive values
+      // If the value didn't change, do nothing
+      if (value === this.previousValue) {
+        return;
       }
 
-      child = child.nextSibling;
+      this.setTextValue(value);
+    } else if (value instanceof TemplateAssembly) {
+      this.setTemplateAssemblyValue(value);
+    }/* else if (Array.isArray(value) || value[Symbol.iterator]) {
+      this._setIterable(value);
+    }*/ else if (value instanceof Node) {
+      this.setNodeValue(value);
+    }/* else if (value.then !== undefined) {
+      this._setPromise(value);
+    }*/ else {
+      // Fallback, will render the string representation
+      this.setTextValue(value);
+    }
+  }
+
+  protected setTemplateAssemblyValue(value: TemplateAssembly) {
+    let instance: TemplateInstance;
+
+    if (this.previousValue &&
+        this.previousValue.diagram === value.diagram) {
+      instance = this.previousValue;
+    } else {
+      instance = new TemplateInstance(value.diagram, value.processor);
+
+      this.setNodeValue(instance);
+      this.previousValue = instance;
     }
 
-    return true;
+    instance.update(value.state);
   }
 
-  constructor(valueSetter: ValueSetter) {
-    this.valueSetter = valueSetter;
+  protected setTextValue(value: string = '') {
+    const node = this.previousSibling!;
+
+    if (node.nextSibling === this.nextSibling &&
+        node.nodeType === Node.TEXT_NODE) {
+      node.textContent = value;
+    } else {
+      this.setNodeValue(document.createTextNode(value));
+    }
+
+    this.previousValue = value;
   }
 
-  get value(): string | void {
-    return this.valueSetter.value;
+  protected setNodeValue(value: Node) {
+    if (this.previousValue === value) {
+      return;
+    }
+
+    this.clear();
+    this.parentNode!.insertBefore(value, this.nextSibling);
+    this.previousValue = value;
   }
 
-  set value(value: string | void) {
-    this.valueSetter.value = value;
+  protected clear() {
+    if (this.parentNode === null) {
+      return;
+    }
+
+    let node = this.previousSibling;
+
+    while (node !== this.nextSibling) {
+      const nextNode: Node | null = node.nextSibling;
+      this.parentNode.removeChild(node);
+      node = nextNode as Node;
+    }
   }
 }
 
-export abstract class ValueSetter {
-  abstract get value(): string | void;
-  abstract set value(value: string | void);
-}

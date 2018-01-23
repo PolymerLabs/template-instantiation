@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  </head>
+  <body>
+
+  <template id="test">
+    <h1>This is a {{title}} template</h1>
+    <input placeholder="{{label}}">
+    <p>{{body}}</b>
+  </template>
+
+  <script type="module">
+    import './lib/html-template-element.js';
+    import { defaultTemplateProcessor } from './lib/template-processor.js';
+
+    const template = document.querySelector('#test');
+    const container = document.querySelector('#container');
+    const instance = template.createInstance(defaultTemplateProcessor, {
+      title: 'FOO',
+      label: 'BAR',
+      body: 'BAZ'
+    });
+
+    container.appendChild(instance);
+
+    //instance.update();
+  </script>
+
+  <div id="container"></div>
+</body>
+</html>

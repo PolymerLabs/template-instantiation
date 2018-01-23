@@ -1,0 +1,19 @@
+import { TemplateProcessor, defaultTemplateProcessor } from './template-processor.js';
+import { TemplateDiagram } from './template-diagram.js';
+import { TemplateInstance } from './template-instance.js';
+
+const templateDiagramCache: Map<HTMLTemplateElement, TemplateDiagram> = new Map();
+
+HTMLTemplateElement.prototype.createInstance = function(
+    processor: TemplateProcessor = defaultTemplateProcessor,
+    state?: any,
+    overrideDiagramCache = false): TemplateInstance {
+
+  if (!templateDiagramCache.has(this) || overrideDiagramCache) {
+    templateDiagramCache.set(this, new TemplateDiagram(this));
+  }
+
+  const diagram = templateDiagramCache.get(this)!;
+
+  return new TemplateInstance(diagram, processor, state);
+}
