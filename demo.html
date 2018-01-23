@@ -9,7 +9,10 @@
   <template id="test">
     <h1>This is a {{title}} template</h1>
     <input placeholder="{{label}}">
-    <p>{{body}}</b>
+    <p>{{body}}</p>
+    <footer>
+      <span>Footer beginning, {{footer}}, footer ending</span>
+    </footer>
   </template>
 
   <script type="module">
@@ -21,12 +24,18 @@
     const instance = template.createInstance(defaultTemplateProcessor, {
       title: 'FOO',
       label: 'BAR',
-      body: 'BAZ'
+      body: 'BAZ',
+      footer: 'QUX'
     });
 
     container.appendChild(instance);
 
-    //instance.update();
+    instance.update({
+      title: 'FIZ',
+      label: 'BUZ',
+      body: 'LUR',
+      footer: 'VIM'
+    });
   </script>
 
   <div id="container"></div>
