@@ -1,5 +1,5 @@
-import { Spec } from '../node_modules/@0xcda7a/test-runner/lib/spec.js';
-import '../node_modules/chai/chai.js';
+import { Spec } from '../../@0xcda7a/test-runner/lib/spec.js';
+import '../../chai/chai.js';
 import { TemplateDiagram } from './template-diagram.js';
 import { NodeTemplateSentinel, AttributeTemplateSentinel } from './template-sentinel.js';
 

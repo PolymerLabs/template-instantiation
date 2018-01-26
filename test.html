@@ -7,7 +7,7 @@
   <body>
 
   <script type="module">
-    import { Suite } from './node_modules/@0xcda7a/test-runner/lib/suite.js';
+    import { Suite } from '../@0xcda7a/test-runner/lib/suite.js';
     import { htmlTemplateElementSpec } from './lib/html-template-element-spec.js';
     import { templateDiagramSpec } from './lib/template-diagram-spec.js';
     import { templateStringParserSpec } from './lib/template-string-parser-spec.js';
@@ -15,7 +15,7 @@
     const suite = new Suite([
       htmlTemplateElementSpec,
       templateDiagramSpec,
-      templateStringParserSpec
+      templateStringParserSpec,
     ]);
 
     suite.run();

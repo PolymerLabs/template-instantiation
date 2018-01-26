@@ -5,8 +5,8 @@ import { TemplateInstance } from './template-instance.js';
 const templateDiagramCache: Map<HTMLTemplateElement, TemplateDiagram> = new Map();
 
 HTMLTemplateElement.prototype.createInstance = function(
-    processor: TemplateProcessor = defaultTemplateProcessor,
     state?: any,
+    processor: TemplateProcessor = defaultTemplateProcessor,
     overrideDiagramCache = false): TemplateInstance {
 
   if (!templateDiagramCache.has(this) || overrideDiagramCache) {
@@ -15,5 +15,5 @@ HTMLTemplateElement.prototype.createInstance = function(
 
   const diagram = templateDiagramCache.get(this)!;
 
-  return new TemplateInstance(diagram, processor, state);
+  return new TemplateInstance(diagram, state, processor);
 }

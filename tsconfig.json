@@ -11,7 +11,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "rootDirs": [
+      "../",
+      "./node_modules"
+    ]
   },
   "include": [
     "src/**/*.ts"

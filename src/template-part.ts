@@ -67,6 +67,7 @@ export class NodeTemplatePart extends TemplatePart {
   protected previousValue: any = null;
   protected previousPartNodes: Node[] = [];
 
+  previousSibling: Node;
   nextSibling: Node | null;
 
   constructor(public templateInstance: TemplateInstance,
@@ -74,6 +75,7 @@ export class NodeTemplatePart extends TemplatePart {
       public node: Node) {
     super(templateInstance, sentinel, node);
 
+    this.previousSibling = node.previousSibling!;
     this.nextSibling = node.nextSibling;
   }
 
@@ -81,12 +83,8 @@ export class NodeTemplatePart extends TemplatePart {
     return this.sentinel.expression;
   }
 
-  get previousSibling(): Node {
-    return this.node;
-  }
-
   get parentNode(): Node | null {
-    return this.node.parentNode;
+    return this.previousSibling.parentNode;
   }
 
   set value(value: any) {
@@ -115,18 +113,18 @@ export class NodeTemplatePart extends TemplatePart {
 
   protected setTemplateAssemblyValue(value: TemplateAssembly) {
     let instance: TemplateInstance;
+    const { diagram, state, processor } = value;
 
     if (this.previousValue &&
-        this.previousValue.diagram === value.diagram) {
+        this.previousValue.diagram === diagram &&
+        this.previousValue.processor === processor) {
       instance = this.previousValue;
+      instance.update(state);
     } else {
-      instance = new TemplateInstance(value.diagram, value.processor);
-
+      instance = new TemplateInstance(diagram, state, processor);
       this.setNodeValue(instance);
       this.previousValue = instance;
     }
-
-    instance.update(value.state);
   }
 
   protected setTextValue(value: string = '') {
@@ -157,7 +155,7 @@ export class NodeTemplatePart extends TemplatePart {
       return;
     }
 
-    let node = this.previousSibling;
+    let node = this.previousSibling.nextSibling!;
 
     while (node !== this.nextSibling) {
       const nextNode: Node | null = node.nextSibling;

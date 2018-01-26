@@ -1,5 +1,6 @@
 import { TemplateDiagram } from './template-diagram.js';
-import { TemplateProcessor } from './template-processor.js';
+import { TemplateProcessor, defaultTemplateProcessor } from
+    './template-processor.js';
 import { TemplatePart } from './template-part.js';
 
 export class TemplateInstance extends DocumentFragment {
@@ -13,8 +14,8 @@ export class TemplateInstance extends DocumentFragment {
 
   constructor(
       public diagram: TemplateDiagram,
-      public processor: TemplateProcessor,
-      state?: any) {
+      state?: any,
+      public processor: TemplateProcessor = defaultTemplateProcessor) {
     super();
 
     this.appendChild(diagram.cloneContent());

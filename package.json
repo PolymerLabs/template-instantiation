@@ -2,14 +2,14 @@
   "name": "template-instantiation",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "lib/html-template-element.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "BSD-3-Clause",
   "devDependencies": {
-    "@0xcda7a/test-runner": "0.0.3",
+    "@0xcda7a/test-runner": "0.0.4",
     "@types/chai": "^4.0.10",
     "chai": "^4.1.2",
     "typescript": "^2.6.2"

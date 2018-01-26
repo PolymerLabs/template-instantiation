@@ -3,6 +3,6 @@ import { TemplateProcessor, defaultTemplateProcessor } from './template-processo
 
 export class TemplateAssembly {
   constructor(public diagram: TemplateDiagram,
-      public processor: TemplateProcessor = defaultTemplateProcessor,
-      public state?: any) {}
+      public state?: any,
+      public processor: TemplateProcessor = defaultTemplateProcessor) {}
 };

@@ -17,11 +17,10 @@
 
   <script type="module">
     import './lib/html-template-element.js';
-    import { defaultTemplateProcessor } from './lib/template-processor.js';
 
     const template = document.querySelector('#test');
     const container = document.querySelector('#container');
-    const instance = template.createInstance(defaultTemplateProcessor, {
+    const instance = template.createInstance({
       title: 'FOO',
       label: 'BAR',
       body: 'BAZ',
@@ -30,12 +29,14 @@
 
     container.appendChild(instance);
 
-    instance.update({
-      title: 'FIZ',
-      label: 'BUZ',
-      body: 'LUR',
-      footer: 'VIM'
-    });
+    setTimeout(function() {
+      instance.update({
+        title: 'FIZ',
+        label: 'BUZ',
+        body: 'LUR',
+        footer: 'VIM'
+      });
+    }, 2000);
   </script>
 
   <div id="container"></div>
