@@ -1,7 +1,16 @@
 import { TemplateDiagram } from './template-diagram.js';
-import { TemplateProcessor, defaultTemplateProcessor } from
+import { TemplateProcessor } from
     './template-processor.js';
-import { TemplatePart } from './template-part.js';
+import {
+  TemplatePart,
+  AttributeTemplatePart,
+  NodeTemplatePart
+} from './template-part.js';
+import {
+  TemplateSentinel,
+  AttributeTemplateSentinel,
+  NodeTemplateSentinel
+} from './template-sentinel.js';
 
 export class TemplateInstance extends DocumentFragment {
   protected previousState: any = null;
@@ -12,10 +21,9 @@ export class TemplateInstance extends DocumentFragment {
     this.previousState = state;
   }
 
-  constructor(
-      public diagram: TemplateDiagram,
-      state?: any,
-      public processor: TemplateProcessor = defaultTemplateProcessor) {
+  constructor(public diagram: TemplateDiagram,
+      public processor: TemplateProcessor,
+      state?: any) {
     super();
 
     this.appendChild(diagram.cloneContent());
@@ -45,13 +53,25 @@ export class TemplateInstance extends DocumentFragment {
         walker.nextNode();
       }
 
-      const part = this.processor.partCallback(
-          this, sentinel, walker.currentNode);
+      const part = this.createPart(sentinel, walker.currentNode);
 
       parts.push(part);
     }
 
     this.parts = parts;
+  }
+
+  // NOTE(cdata): In the original pass, this was exposed in the
+  // TemplateProcessor to be optionally overridden so that parts could
+  // have custom implementations.
+  protected createPart(sentinel: TemplateSentinel, node: Node): TemplatePart {
+    if (sentinel instanceof AttributeTemplateSentinel) {
+      return new AttributeTemplatePart(this, sentinel, node);
+    } else if (sentinel instanceof NodeTemplateSentinel) {
+      return new NodeTemplatePart(this, sentinel, node);
+    }
+
+    throw new Error(`Unknown sentinel type.`);
   }
 }
 

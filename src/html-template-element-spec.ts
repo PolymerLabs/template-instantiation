@@ -1,6 +1,6 @@
 import { Spec } from '../../@0xcda7a/test-runner/lib/spec.js';
 import '../../chai/chai.js';
-import { TemplateInstance } from './template-instance.js';
+import { ExampleTemplateProcessor } from './example-template-processor.js';
 import './html-template-element.js';
 
 const spec = new Spec();
@@ -20,24 +20,44 @@ describe('HTMLTemplateElement', () => {
     });
 
     describe('without arguments', () => {
-      it('returns a DocumentFragment', (context: any) => {
-        const { template } = context;
-        const instance = template.createInstance();
+      it('throws due to missing processor', ({ template }: any) => {
+        let threw = false;
 
-        expect(instance).to.be.instanceof(DocumentFragment);
-      });
+        try {
+          template.createInstance();
+        } catch (e) {
+          threw = true;
+        }
 
-      it('returns a TemplateInstance', (context: any) => {
-        const { template } = context;
-        const instance = template.createInstance();
-
-        expect(instance).to.be.instanceof(TemplateInstance);
+        expect(threw).to.be.equal(true);
       });
     });
 
-    describe('with arguments', () => {
-      describe('specifying a processor', () => {});
-      describe('specifying initial state', () => {});
+    describe('given a processor', () => {
+      fixture((context: any) => {
+        return { ...context, processor: new ExampleTemplateProcessor };
+      });
+
+      it('returns a DocumentFragment', ({ template, processor }: any) => {
+        const instance = template.createInstance(processor);
+        expect(instance).to.be.instanceof(DocumentFragment);
+      });
+
+      it('returns a TemplateInstance', ({ template, processor }: any) => {
+        const instance = template.createInstance(processor);
+        expect(instance).to.be.instanceof(DocumentFragment);
+      });
+
+      describe('with initial state', () => {
+        fixture((context: any) => {
+          return { ...context, state: { content: 'Hello world.' } };
+        });
+
+        it('puts the state in the DOM', ({ template, processor, state }: any) => {
+          const instance = template.createInstance(processor, state);
+          expect(instance.childNodes[0].innerText).to.be.equal(state.content);
+        });
+      });
     });
   });
 });

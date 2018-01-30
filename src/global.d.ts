@@ -2,8 +2,9 @@ declare class TemplateProcessor {}
 declare class TemplateInstance {}
 
 interface HTMLTemplateElement {
-  createInstance(state?: any,
-      processor?: TemplateProcessor,
+  createInstance(
+      processor: TemplateProcessor,
+      state?: any,
       overrideDiagramCache?: boolean): TemplateInstance
 }
 

@@ -1,4 +1,3 @@
-import { TemplateAssembly } from './template-assembly.js';
 import { TemplateInstance } from './template-instance.js';
 import {
   TemplateSentinel,
@@ -7,20 +6,20 @@ import {
 } from './template-sentinel.js';
 
 export abstract class TemplatePart {
-  protected previousValue: any;
+  currentValue: any = null;
 
-  constructor(
-      public templateInstance: TemplateInstance,
+  constructor(public templateInstance: TemplateInstance,
       public sentinel: TemplateSentinel,
       public node: Node) {}
 
-
+  // NOTE(cdata): rniwa calls for this to be the result of concatenating the
+  // textContent of all replacement nodes:
   get value(): any {
-    return this.previousValue;
+    return this.currentValue;
   }
 
   set value(value: any) {
-    this.previousValue = value;
+    this.currentValue = value;
   }
 }
 
@@ -63,19 +62,23 @@ export class AttributeTemplatePart extends TemplatePart {
   }
 }
 
-export class NodeTemplatePart extends TemplatePart {
-  protected previousValue: any = null;
-  protected previousPartNodes: Node[] = [];
+const interstitialTemplate: HTMLTemplateElement =
+    document.createElement('template');
 
+export class NodeTemplatePart extends TemplatePart {
+  currentNodes: Node[] = [];
   previousSibling: Node;
   nextSibling: Node | null;
+
+  protected insertionFragment: DocumentFragment =
+      document.createDocumentFragment();
 
   constructor(public templateInstance: TemplateInstance,
       public sentinel: NodeTemplateSentinel,
       public node: Node) {
     super(templateInstance, sentinel, node);
 
-    this.previousSibling = node.previousSibling!;
+    this.previousSibling = node;
     this.nextSibling = node.nextSibling;
   }
 
@@ -88,66 +91,40 @@ export class NodeTemplatePart extends TemplatePart {
   }
 
   set value(value: any) {
-    if (value === null ||
-        !(typeof value === 'object' || typeof value === 'function')) {
-      // Handle primitive values
-      // If the value didn't change, do nothing
-      if (value === this.previousValue) {
-        return;
+    if (this.currentNodes.length === 1 &&
+        this.currentNodes[0].nodeType === Node.TEXT_NODE) {
+      this.currentNodes[0].nodeValue = value;
+    } else {
+      this.replace(document.createTextNode(value));
+    }
+
+    this.currentValue = value;
+  }
+
+  replace(...nodes: Array<Node | string>) {
+    this.clear();
+
+    for (let i = 0; i < nodes.length; ++i) {
+      let node = nodes[i];
+      if (typeof node === 'string') {
+        node = document.createTextNode(node);
+      } else if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
+          node.nodeType === Node.DOCUMENT_NODE) {
+        throw new DOMException('InvalidNodeTypeError');
       }
 
-      this.setTextValue(value);
-    } else if (value instanceof TemplateAssembly) {
-      this.setTemplateAssemblyValue(value);
-    }/* else if (Array.isArray(value) || value[Symbol.iterator]) {
-      this._setIterable(value);
-    }*/ else if (value instanceof Node) {
-      this.setNodeValue(value);
-    }/* else if (value.then !== undefined) {
-      this._setPromise(value);
-    }*/ else {
-      // Fallback, will render the string representation
-      this.setTextValue(value);
+      this.appendNode(node);
     }
   }
 
-  protected setTemplateAssemblyValue(value: TemplateAssembly) {
-    let instance: TemplateInstance;
-    const { diagram, state, processor } = value;
-
-    if (this.previousValue &&
-        this.previousValue.diagram === diagram &&
-        this.previousValue.processor === processor) {
-      instance = this.previousValue;
-      instance.update(state);
-    } else {
-      instance = new TemplateInstance(diagram, state, processor);
-      this.setNodeValue(instance);
-      this.previousValue = instance;
-    }
+  replaceHTML(html: string) {
+    interstitialTemplate.innerHTML = html;
+    this.replace(...interstitialTemplate.content.childNodes);
   }
 
-  protected setTextValue(value: string = '') {
-    const node = this.previousSibling!;
-
-    if (node.nextSibling === this.nextSibling &&
-        node.nodeType === Node.TEXT_NODE) {
-      node.textContent = value;
-    } else {
-      this.setNodeValue(document.createTextNode(value));
-    }
-
-    this.previousValue = value;
-  }
-
-  protected setNodeValue(value: Node) {
-    if (this.previousValue === value) {
-      return;
-    }
-
-    this.clear();
-    this.parentNode!.insertBefore(value, this.nextSibling);
-    this.previousValue = value;
+  protected appendNode(node: Node) {
+    this.parentNode!.insertBefore(node, this.nextSibling);
+    this.currentNodes.push(node);
   }
 
   protected clear() {
@@ -162,6 +139,8 @@ export class NodeTemplatePart extends TemplatePart {
       this.parentNode.removeChild(node);
       node = nextNode as Node;
     }
+
+    this.currentNodes = [];
   }
 }
 

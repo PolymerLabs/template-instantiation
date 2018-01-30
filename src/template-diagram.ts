@@ -8,7 +8,7 @@ import {
 export class TemplateDiagram {
   sentinels: TemplateSentinel[];
 
-  protected parsedTemplate: HTMLTemplateElement;
+  parsedTemplate: HTMLTemplateElement;
 
   constructor(public template: HTMLTemplateElement) {
     this.parseAndGenerateSentinels();
@@ -48,13 +48,14 @@ export class TemplateDiagram {
         // TODO(cdata): Fix IE/Edge attribute order here
         // @see https://github.com/Polymer/lit-html/blob/master/src/lit-html.ts#L220-L229
 
-        for (let i = 0; i < attributes.length; ++i) {
+        for (let i = 0; i < attributes.length;) {
           const attribute = attributes[i];
           const { name, value } = attribute;
 
           const [ strings, expressions ] = parse(value);
 
           if (strings.length === 1) {
+            ++i;
             continue;
           }
 
@@ -73,15 +74,10 @@ export class TemplateDiagram {
         }
 
         for (let i = 0; i < expressions.length; ++i) {
-          const partNode = document.createTextNode('');
+          const partNode = document.createTextNode(strings[i]);
 
-          nodeIndex++;
-
-          // NOTE(cdata): Lit only uses one node for this. Can probably be optimized....
           // @see https://github.com/Polymer/lit-html/blob/master/src/lit-html.ts#L267-L272
-          parentNode!.insertBefore(document.createTextNode(strings[i]), node);
           parentNode!.insertBefore(partNode, node);
-
           sentinels.push(new NodeTemplateSentinel(nodeIndex++, expressions[i]));
         }
 
