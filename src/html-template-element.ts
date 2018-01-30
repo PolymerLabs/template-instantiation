@@ -1,22 +1,22 @@
 import { TemplateProcessor } from './template-processor.js';
-import { TemplateDiagram } from './template-diagram.js';
+import { TemplateDefinition } from './template-definition.js';
 import { TemplateInstance } from './template-instance.js';
 
-const templateDiagramCache: Map<HTMLTemplateElement, TemplateDiagram> = new Map();
+const templateDefinitionCache: Map<HTMLTemplateElement, TemplateDefinition> = new Map();
 
 HTMLTemplateElement.prototype.createInstance = function(
     processor: TemplateProcessor,
     state?: any,
-    overrideDiagramCache = false): TemplateInstance {
+    overrideDefinitionCache = false): TemplateInstance {
   if (processor == null) {
     throw new Error('The first argument of createInstance must be an implementation of TemplateProcessor');
   }
 
-  if (!templateDiagramCache.has(this) || overrideDiagramCache) {
-    templateDiagramCache.set(this, new TemplateDiagram(this));
+  if (!templateDefinitionCache.has(this) || overrideDefinitionCache) {
+    templateDefinitionCache.set(this, new TemplateDefinition(this));
   }
 
-  const diagram = templateDiagramCache.get(this)!;
+  const definition = templateDefinitionCache.get(this)!;
 
-  return new TemplateInstance(diagram, processor, state);
+  return new TemplateInstance(definition, processor, state);
 };

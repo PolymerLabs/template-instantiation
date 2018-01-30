@@ -1,41 +1,40 @@
 import { TemplateInstance } from './template-instance.js';
 import {
-  TemplateSentinel,
-  NodeTemplateSentinel,
-  AttributeTemplateSentinel
-} from './template-sentinel.js';
+  TemplateExpression,
+  NodeTemplateExpression,
+  AttributeTemplateExpression
+} from './template-expression.js';
 
 export abstract class TemplatePart {
-  currentValue: any = null;
+  rawValue: any = null;
 
   constructor(public templateInstance: TemplateInstance,
-      public sentinel: TemplateSentinel,
+      public expression: TemplateExpression,
       public node: Node) {}
 
   // NOTE(cdata): rniwa calls for this to be the result of concatenating the
   // textContent of all replacement nodes:
   get value(): any {
-    return this.currentValue;
+    return this.rawValue;
   }
 
   set value(value: any) {
-    this.currentValue = value;
+    this.update(value);
+    this.rawValue = value;
   }
+
+  protected abstract update(value: any): void;
 }
 
 export class AttributeTemplatePart extends TemplatePart {
   constructor(
       public templateInstance: TemplateInstance,
-      public sentinel: AttributeTemplateSentinel,
+      public expression: AttributeTemplateExpression,
       public node: Node) {
-    super(templateInstance, sentinel, node);
+    super(templateInstance, expression, node);
   }
 
-  get expressions(): string[] {
-    return this.sentinel.expressions;
-  }
-
-  set value(value: any) {
+  protected update(value: any) {
     if (value == null) {
       value = [];
     } else if (!Array.isArray(value)) {
@@ -43,8 +42,8 @@ export class AttributeTemplatePart extends TemplatePart {
     }
 
     const node = this.node as Element;
-    const { sentinel } = this;
-    const { strings, attributeName } = sentinel;
+    const { expression } = this;
+    const { strings, attributeName } = expression;
     const valueFragments = [];
 
     for (let i = 0; i < (strings.length - 1); ++i) {
@@ -59,6 +58,8 @@ export class AttributeTemplatePart extends TemplatePart {
     } else {
       node.removeAttribute(attributeName);
     }
+
+    this.rawValue = value;
   }
 }
 
@@ -74,32 +75,18 @@ export class NodeTemplatePart extends TemplatePart {
       document.createDocumentFragment();
 
   constructor(public templateInstance: TemplateInstance,
-      public sentinel: NodeTemplateSentinel,
+      public expression: NodeTemplateExpression,
       public node: Node) {
-    super(templateInstance, sentinel, node);
+    super(templateInstance, expression, node);
 
     this.previousSibling = node;
     this.nextSibling = node.nextSibling;
-  }
-
-  get expression() {
-    return this.sentinel.expression;
   }
 
   get parentNode(): Node | null {
     return this.previousSibling.parentNode;
   }
 
-  set value(value: any) {
-    if (this.currentNodes.length === 1 &&
-        this.currentNodes[0].nodeType === Node.TEXT_NODE) {
-      this.currentNodes[0].nodeValue = value;
-    } else {
-      this.replace(document.createTextNode(value));
-    }
-
-    this.currentValue = value;
-  }
 
   replace(...nodes: Array<Node | string>) {
     this.clear();
@@ -141,6 +128,15 @@ export class NodeTemplatePart extends TemplatePart {
     }
 
     this.currentNodes = [];
+  }
+
+  protected update(value: any) {
+    if (this.currentNodes.length === 1 &&
+        this.currentNodes[0].nodeType === Node.TEXT_NODE) {
+      this.currentNodes[0].nodeValue = value;
+    } else {
+      this.replace(document.createTextNode(value));
+    }
   }
 }
 

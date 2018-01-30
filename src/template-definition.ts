@@ -1,27 +1,27 @@
 import { parse } from './template-string-parser.js';
 import {
-  TemplateSentinel,
-  NodeTemplateSentinel,
-  AttributeTemplateSentinel
-} from './template-sentinel.js';
+  TemplateExpression,
+  NodeTemplateExpression,
+  AttributeTemplateExpression
+} from './template-expression.js';
 
-export class TemplateDiagram {
-  sentinels: TemplateSentinel[];
+export class TemplateDefinition {
+  expressions: TemplateExpression[];
 
   parsedTemplate: HTMLTemplateElement;
 
   constructor(public template: HTMLTemplateElement) {
-    this.parseAndGenerateSentinels();
+    this.parseAndGenerateExpressions();
   }
 
   cloneContent() {
     return this.parsedTemplate.content.cloneNode(true);
   }
 
-  protected parseAndGenerateSentinels() {
+  protected parseAndGenerateExpressions() {
     const { template } = this;
     const content = template.content.cloneNode(true);
-    const sentinels = [];
+    const expressions: TemplateExpression[] = [];
 
     // Edge needs all 4 parameters present; IE11 needs 3rd parameter to be null
     const walker = document.createTreeWalker(
@@ -52,20 +52,20 @@ export class TemplateDiagram {
           const attribute = attributes[i];
           const { name, value } = attribute;
 
-          const [ strings, expressions ] = parse(value);
+          const [ strings, values ] = parse(value);
 
           if (strings.length === 1) {
             ++i;
             continue;
           }
 
-          sentinels.push(new AttributeTemplateSentinel(
-              nodeIndex, name, strings, expressions));
+          expressions.push(new AttributeTemplateExpression(
+              nodeIndex, name, strings, values));
 
           node.removeAttribute(name);
         }
       } else if (node.nodeType === Node.TEXT_NODE) {
-        const [ strings, expressions ] = parse(node.nodeValue || '');
+        const [ strings, values ] = parse(node.nodeValue || '');
         const { parentNode } = node;
         const document = node.ownerDocument;
 
@@ -73,19 +73,19 @@ export class TemplateDiagram {
           continue;
         }
 
-        for (let i = 0; i < expressions.length; ++i) {
+        for (let i = 0; i < values.length; ++i) {
           const partNode = document.createTextNode(strings[i]);
 
           // @see https://github.com/Polymer/lit-html/blob/master/src/lit-html.ts#L267-L272
           parentNode!.insertBefore(partNode, node);
-          sentinels.push(new NodeTemplateSentinel(nodeIndex++, expressions[i]));
+          expressions.push(new NodeTemplateExpression(nodeIndex++, values[i]));
         }
 
         node.nodeValue = strings[strings.length - 1];
       }
     }
 
-    this.sentinels = sentinels;
+    this.expressions = expressions;
 
     this.parsedTemplate = document.createElement('template');
     this.parsedTemplate.content.appendChild(content);

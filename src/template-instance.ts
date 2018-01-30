@@ -1,4 +1,4 @@
-import { TemplateDiagram } from './template-diagram.js';
+import { TemplateDefinition } from './template-definition.js';
 import { TemplateProcessor } from
     './template-processor.js';
 import {
@@ -7,10 +7,10 @@ import {
   NodeTemplatePart
 } from './template-part.js';
 import {
-  TemplateSentinel,
-  AttributeTemplateSentinel,
-  NodeTemplateSentinel
-} from './template-sentinel.js';
+  TemplateExpression,
+  AttributeTemplateExpression,
+  NodeTemplateExpression
+} from './template-expression.js';
 
 export class TemplateInstance extends DocumentFragment {
   protected previousState: any = null;
@@ -21,19 +21,19 @@ export class TemplateInstance extends DocumentFragment {
     this.previousState = state;
   }
 
-  constructor(public diagram: TemplateDiagram,
+  constructor(public definition: TemplateDefinition,
       public processor: TemplateProcessor,
       state?: any) {
     super();
 
-    this.appendChild(diagram.cloneContent());
+    this.appendChild(definition.cloneContent());
     this.generateParts();
     this.update(state);
   }
 
   protected generateParts() {
-    const { diagram } = this;
-    const { sentinels } = diagram;
+    const { definition } = this;
+    const { expressions } = definition;
     const parts = [];
 
     const walker = document.createTreeWalker(
@@ -44,16 +44,16 @@ export class TemplateInstance extends DocumentFragment {
 
     let walkerIndex = -1;
 
-    for (let i = 0; i < sentinels.length; ++i) {
-      const sentinel = sentinels[i];
-      const { nodeIndex } = sentinel;
+    for (let i = 0; i < expressions.length; ++i) {
+      const expression = expressions[i];
+      const { nodeIndex } = expression;
 
       while (walkerIndex < nodeIndex) {
         walkerIndex++;
         walker.nextNode();
       }
 
-      const part = this.createPart(sentinel, walker.currentNode);
+      const part = this.createPart(expression, walker.currentNode);
 
       parts.push(part);
     }
@@ -64,14 +64,14 @@ export class TemplateInstance extends DocumentFragment {
   // NOTE(cdata): In the original pass, this was exposed in the
   // TemplateProcessor to be optionally overridden so that parts could
   // have custom implementations.
-  protected createPart(sentinel: TemplateSentinel, node: Node): TemplatePart {
-    if (sentinel instanceof AttributeTemplateSentinel) {
-      return new AttributeTemplatePart(this, sentinel, node);
-    } else if (sentinel instanceof NodeTemplateSentinel) {
-      return new NodeTemplatePart(this, sentinel, node);
+  protected createPart(expression: TemplateExpression, node: Node): TemplatePart {
+    if (expression instanceof AttributeTemplateExpression) {
+      return new AttributeTemplatePart(this, expression, node);
+    } else if (expression instanceof NodeTemplateExpression) {
+      return new NodeTemplatePart(this, expression, node);
     }
 
-    throw new Error(`Unknown sentinel type.`);
+    throw new Error(`Unknown expression type.`);
   }
 }
 
