@@ -7,10 +7,10 @@ import {
   NodeTemplatePart
 } from './template-part.js';
 import {
-  TemplateExpression,
-  AttributeTemplateExpression,
-  NodeTemplateExpression
-} from './template-expression.js';
+  TemplateRule,
+  AttributeTemplateRule,
+  NodeTemplateRule
+} from './template-rule.js';
 
 export class TemplateInstance extends DocumentFragment {
   protected previousState: any = null;
@@ -33,7 +33,7 @@ export class TemplateInstance extends DocumentFragment {
 
   protected generateParts() {
     const { definition } = this;
-    const { expressions } = definition;
+    const { rules } = definition;
     const parts = [];
 
     const walker = document.createTreeWalker(
@@ -44,16 +44,16 @@ export class TemplateInstance extends DocumentFragment {
 
     let walkerIndex = -1;
 
-    for (let i = 0; i < expressions.length; ++i) {
-      const expression = expressions[i];
-      const { nodeIndex } = expression;
+    for (let i = 0; i < rules.length; ++i) {
+      const rule = rules[i];
+      const { nodeIndex } = rule;
 
       while (walkerIndex < nodeIndex) {
         walkerIndex++;
         walker.nextNode();
       }
 
-      const part = this.createPart(expression, walker.currentNode);
+      const part = this.createPart(rule, walker.currentNode);
 
       parts.push(part);
     }
@@ -64,14 +64,14 @@ export class TemplateInstance extends DocumentFragment {
   // NOTE(cdata): In the original pass, this was exposed in the
   // TemplateProcessor to be optionally overridden so that parts could
   // have custom implementations.
-  protected createPart(expression: TemplateExpression, node: Node): TemplatePart {
-    if (expression instanceof AttributeTemplateExpression) {
-      return new AttributeTemplatePart(this, expression, node);
-    } else if (expression instanceof NodeTemplateExpression) {
-      return new NodeTemplatePart(this, expression, node);
+  protected createPart(rule: TemplateRule, node: Node): TemplatePart {
+    if (rule instanceof AttributeTemplateRule) {
+      return new AttributeTemplatePart(this, rule, node);
+    } else if (rule instanceof NodeTemplateRule) {
+      return new NodeTemplatePart(this, rule, node);
     }
 
-    throw new Error(`Unknown expression type.`);
+    throw new Error(`Unknown rule type.`);
   }
 }
 

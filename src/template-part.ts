@@ -1,49 +1,63 @@
 import { TemplateInstance } from './template-instance.js';
 import {
-  TemplateExpression,
-  NodeTemplateExpression,
-  AttributeTemplateExpression
-} from './template-expression.js';
+  TemplateRule,
+  AttributeTemplateRule,
+  NodeTemplateRule
+} from './template-rule.js';
 
 export abstract class TemplatePart {
-  rawValue: any = null;
+  protected sourceValue: any = null;
+  protected sourceNode: Node;
 
   constructor(public templateInstance: TemplateInstance,
-      public expression: TemplateExpression,
-      public node: Node) {}
+      public rule: TemplateRule,
+      node: Node) {
+    this.relocateToNode(node);
+  }
+
+  get node() {
+    return this.sourceNode;
+  }
+
+  set node(node: Node) {
+    this.relocateToNode(node);
+  }
 
   // NOTE(cdata): rniwa calls for this to be the result of concatenating the
   // textContent of all replacement nodes:
   get value(): any {
-    return this.rawValue;
+    return this.sourceValue;
   }
 
   set value(value: any) {
-    this.update(value);
-    this.rawValue = value;
+    this.sourceValue = value;
+    this.applyValue(value);
   }
 
-  protected abstract update(value: any): void;
+  abstract clear(): void;
+  protected abstract applyValue(value: any): void;
+  protected abstract relocateToNode(node: Node): void;
 }
 
 export class AttributeTemplatePart extends TemplatePart {
-  constructor(
-      public templateInstance: TemplateInstance,
-      public expression: AttributeTemplateExpression,
-      public node: Node) {
-    super(templateInstance, expression, node);
+  rule: AttributeTemplateRule;
+
+  clear() {
+    if (this.node != null) {
+      (this.node as Element).removeAttribute(this.rule.attributeName);
+    }
   }
 
-  protected update(value: any) {
+  protected applyValue(value: any) {
     if (value == null) {
       value = [];
     } else if (!Array.isArray(value)) {
       value = [value];
     }
 
-    const node = this.node as Element;
-    const { expression } = this;
-    const { strings, attributeName } = expression;
+    const element = this.node as Element;
+    const { rule } = this;
+    const { strings, attributeName } = rule;
     const valueFragments = [];
 
     for (let i = 0; i < (strings.length - 1); ++i) {
@@ -54,19 +68,22 @@ export class AttributeTemplatePart extends TemplatePart {
     const attributeValue = valueFragments.join('');
 
     if (attributeValue != null) {
-      node.setAttribute(attributeName, attributeValue);
+      element.setAttribute(attributeName, attributeValue);
     } else {
-      node.removeAttribute(attributeName);
+      element.removeAttribute(attributeName);
     }
+  }
 
-    this.rawValue = value;
+  protected relocateToNode(node: Node) {
+    this.clear();
+    this.sourceNode = node;
+    this.applyValue(this.value);
   }
 }
 
-const interstitialTemplate: HTMLTemplateElement =
-    document.createElement('template');
-
 export class NodeTemplatePart extends TemplatePart {
+  rule: NodeTemplateRule;
+
   currentNodes: Node[] = [];
   previousSibling: Node;
   nextSibling: Node | null;
@@ -74,19 +91,9 @@ export class NodeTemplatePart extends TemplatePart {
   protected insertionFragment: DocumentFragment =
       document.createDocumentFragment();
 
-  constructor(public templateInstance: TemplateInstance,
-      public expression: NodeTemplateExpression,
-      public node: Node) {
-    super(templateInstance, expression, node);
-
-    this.previousSibling = node;
-    this.nextSibling = node.nextSibling;
-  }
-
   get parentNode(): Node | null {
     return this.previousSibling.parentNode;
   }
-
 
   replace(...nodes: Array<Node | string>) {
     this.clear();
@@ -104,17 +111,17 @@ export class NodeTemplatePart extends TemplatePart {
     }
   }
 
-  replaceHTML(html: string) {
-    interstitialTemplate.innerHTML = html;
-    this.replace(...interstitialTemplate.content.childNodes);
+  fork(): NodeTemplatePart {
+    if (this.nextSibling == null) {
+      this.nextSibling = document.createTextNode('');
+      this.previousSibling.parentNode!.appendChild(this.nextSibling);
+    }
+
+    return new NodeTemplatePart(this.templateInstance, this.rule,
+        this.nextSibling);
   }
 
-  protected appendNode(node: Node) {
-    this.parentNode!.insertBefore(node, this.nextSibling);
-    this.currentNodes.push(node);
-  }
-
-  protected clear() {
+  clear() {
     if (this.parentNode === null) {
       return;
     }
@@ -130,7 +137,28 @@ export class NodeTemplatePart extends TemplatePart {
     this.currentNodes = [];
   }
 
-  protected update(value: any) {
+  protected appendNode(node: Node) {
+    this.parentNode!.insertBefore(node, this.nextSibling);
+    this.currentNodes.push(node);
+  }
+
+  protected relocateToNode(node: Node) {
+    const { currentNodes, sourceNode } = this;
+
+    if (sourceNode != null) {
+      this.clear();
+    }
+
+    this.previousSibling = node;
+    this.nextSibling = node.nextSibling;
+    this.sourceNode = node;
+
+    if (currentNodes != null && currentNodes.length) {
+      this.replace(...currentNodes);
+    }
+  }
+
+  protected applyValue(value: any) {
     if (this.currentNodes.length === 1 &&
         this.currentNodes[0].nodeType === Node.TEXT_NODE) {
       this.currentNodes[0].nodeValue = value;

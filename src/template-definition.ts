@@ -1,27 +1,27 @@
 import { parse } from './template-string-parser.js';
 import {
-  TemplateExpression,
-  NodeTemplateExpression,
-  AttributeTemplateExpression
-} from './template-expression.js';
+  TemplateRule,
+  NodeTemplateRule,
+  AttributeTemplateRule
+} from './template-rule.js';
 
 export class TemplateDefinition {
-  expressions: TemplateExpression[];
+  rules: TemplateRule[];
 
   parsedTemplate: HTMLTemplateElement;
 
   constructor(public template: HTMLTemplateElement) {
-    this.parseAndGenerateExpressions();
+    this.parseAndGenerateRules();
   }
 
   cloneContent() {
     return this.parsedTemplate.content.cloneNode(true);
   }
 
-  protected parseAndGenerateExpressions() {
+  protected parseAndGenerateRules() {
     const { template } = this;
     const content = template.content.cloneNode(true);
-    const expressions: TemplateExpression[] = [];
+    const rules: TemplateRule[] = [];
 
     // Edge needs all 4 parameters present; IE11 needs 3rd parameter to be null
     const walker = document.createTreeWalker(
@@ -59,7 +59,7 @@ export class TemplateDefinition {
             continue;
           }
 
-          expressions.push(new AttributeTemplateExpression(
+          rules.push(new AttributeTemplateRule(
               nodeIndex, name, strings, values));
 
           node.removeAttribute(name);
@@ -78,14 +78,14 @@ export class TemplateDefinition {
 
           // @see https://github.com/Polymer/lit-html/blob/master/src/lit-html.ts#L267-L272
           parentNode!.insertBefore(partNode, node);
-          expressions.push(new NodeTemplateExpression(nodeIndex++, values[i]));
+          rules.push(new NodeTemplateRule(nodeIndex++, values[i]));
         }
 
         node.nodeValue = strings[strings.length - 1];
       }
     }
 
-    this.expressions = expressions;
+    this.rules = rules;
 
     this.parsedTemplate = document.createElement('template');
     this.parsedTemplate.content.appendChild(content);

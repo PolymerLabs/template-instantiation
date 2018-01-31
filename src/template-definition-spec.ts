@@ -1,7 +1,7 @@
 import { Spec } from '../../@0xcda7a/test-runner/lib/spec.js';
 import '../../chai/chai.js';
 import { TemplateDefinition } from './template-definition.js';
-import { NodeTemplateExpression, AttributeTemplateExpression } from './template-expression.js';
+import { NodeTemplateRule, AttributeTemplateRule } from './template-rule.js';
 
 const spec = new Spec();
 const { describe, it, fixture } = spec;
@@ -18,9 +18,9 @@ describe('TemplateDefinition', () => {
       };
     });
 
-    it('generates no expressions', (context: any) => {
+    it('generates no rules', (context: any) => {
       const { definition } = context;
-      expect(definition.expressions.length).to.be.equal(0);
+      expect(definition.rules.length).to.be.equal(0);
     });
   });
 
@@ -36,8 +36,8 @@ describe('TemplateDefinition', () => {
 
     it('generates a node sentinel', (context: any) => {
       const { definition } = context;
-      expect(definition.expressions.length).to.be.equal(1);
-      expect(definition.expressions[0]).to.be.instanceof(NodeTemplateExpression);
+      expect(definition.rules.length).to.be.equal(1);
+      expect(definition.rules[0]).to.be.instanceof(NodeTemplateRule);
     });
   });
 
@@ -53,8 +53,8 @@ describe('TemplateDefinition', () => {
 
     it('generates an attribute sentinel', (context: any) => {
       const { definition } = context;
-      expect(definition.expressions.length).to.be.equal(1);
-      expect(definition.expressions[0]).to.be.instanceof(AttributeTemplateExpression);
+      expect(definition.rules.length).to.be.equal(1);
+      expect(definition.rules[0]).to.be.instanceof(AttributeTemplateRule);
     });
   });
 
@@ -73,32 +73,32 @@ prefix {{qux}} suffix
       };
     });
 
-    it('generates several expressions', (context: any) => {
+    it('generates several rules', (context: any) => {
       const { definition } = context;
-      const { expressions } = definition;
+      const { rules } = definition;
 
-      expect(expressions.length).to.be.equal(5);
+      expect(rules.length).to.be.equal(5);
     });
 
-    it('generates expressions in tree order', (context: any) => {
+    it('generates rules in tree order', (context: any) => {
       const { definition } = context;
-      const { expressions } = definition;
-      const [ bar, baz, qux, rak, lur ] = expressions;
+      const { rules } = definition;
+      const [ bar, baz, qux, rak, lur ] = rules;
 
-      expect(bar).to.be.instanceof(AttributeTemplateExpression);
-      expect(bar.values).to.be.eql(['bar']);
+      expect(bar).to.be.instanceof(AttributeTemplateRule);
+      expect(bar.expressions).to.be.eql(['bar']);
 
-      expect(baz).to.be.instanceof(NodeTemplateExpression);
-      expect(baz.value).to.be.equal('baz');
+      expect(baz).to.be.instanceof(NodeTemplateRule);
+      expect(baz.expression).to.be.equal('baz');
 
-      expect(qux).to.be.instanceof(NodeTemplateExpression);
-      expect(qux.value).to.be.equal('qux');
+      expect(qux).to.be.instanceof(NodeTemplateRule);
+      expect(qux.expression).to.be.equal('qux');
 
-      expect(rak).to.be.instanceof(AttributeTemplateExpression);
-      expect(rak.values).to.be.eql(['rak']);
+      expect(rak).to.be.instanceof(AttributeTemplateRule);
+      expect(rak.expressions).to.be.eql(['rak']);
 
-      expect(lur).to.be.instanceof(NodeTemplateExpression);
-      expect(lur.value).to.be.eql('lur');
+      expect(lur).to.be.instanceof(NodeTemplateRule);
+      expect(lur.expression).to.be.eql('lur');
     });
   });
 });
