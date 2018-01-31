@@ -12,15 +12,11 @@ export abstract class TemplatePart {
   constructor(public templateInstance: TemplateInstance,
       public rule: TemplateRule,
       node: Node) {
-    this.relocateToNode(node);
+    this.relocateTo(node);
   }
 
-  get node() {
+  get node(): Node {
     return this.sourceNode;
-  }
-
-  set node(node: Node) {
-    this.relocateToNode(node);
   }
 
   // NOTE(cdata): rniwa calls for this to be the result of concatenating the
@@ -35,8 +31,12 @@ export abstract class TemplatePart {
   }
 
   abstract clear(): void;
+
+  // SPECIAL NOTE(cdata): Parts in this implementation can be "relocated" to
+  // arbitrary positions in a tree.
+  abstract relocateTo(node: Node): void;
+
   protected abstract applyValue(value: any): void;
-  protected abstract relocateToNode(node: Node): void;
 }
 
 export class AttributeTemplatePart extends TemplatePart {
@@ -46,6 +46,12 @@ export class AttributeTemplatePart extends TemplatePart {
     if (this.node != null) {
       (this.node as Element).removeAttribute(this.rule.attributeName);
     }
+  }
+
+  relocateTo(node: Node) {
+    this.clear();
+    this.sourceNode = node;
+    this.applyValue(this.value);
   }
 
   protected applyValue(value: any) {
@@ -73,12 +79,6 @@ export class AttributeTemplatePart extends TemplatePart {
       element.removeAttribute(attributeName);
     }
   }
-
-  protected relocateToNode(node: Node) {
-    this.clear();
-    this.sourceNode = node;
-    this.applyValue(this.value);
-  }
 }
 
 export class NodeTemplatePart extends TemplatePart {
@@ -88,45 +88,91 @@ export class NodeTemplatePart extends TemplatePart {
   previousSibling: Node;
   nextSibling: Node | null;
 
-  protected insertionFragment: DocumentFragment =
-      document.createDocumentFragment();
-
   get parentNode(): Node | null {
     return this.previousSibling.parentNode;
   }
 
-  replace(...nodes: Array<Node | string>) {
+  replace(...nodes: Array<Node | string | NodeTemplatePart>) {
     this.clear();
 
     for (let i = 0; i < nodes.length; ++i) {
       let node = nodes[i];
+
       if (typeof node === 'string') {
         node = document.createTextNode(node);
-      } else if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
-          node.nodeType === Node.DOCUMENT_NODE) {
-        throw new DOMException('InvalidNodeTypeError');
       }
 
-      this.appendNode(node);
+      // SPECIAL NOTE(cdata): This implementation supports NodeTemplatePart as
+      // a replacement node:
+      if (node instanceof NodeTemplatePart) {
+        const part = node as NodeTemplatePart;
+        node = part.node;
+        this.appendNode(node);
+        part.relocateTo(node);
+      } else if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
+          node.nodeType === Node.DOCUMENT_NODE) {
+        // NOTE(cdata): Apple's proposal explicit forbid's document fragments
+        // @see https://github.com/w3c/webcomponents/blob/gh-pages/proposals/Template-Instantiation.md
+        throw new DOMException('InvalidNodeTypeError');
+      } else {
+        this.appendNode(node);
+      }
     }
   }
 
+  /**
+   * Forks the current part, inserting a new part after the current one and
+   * returning it. The forked part shares the TemplateInstance and the
+   * TemplateRule of the current part.
+   */
   fork(): NodeTemplatePart {
-    if (this.nextSibling == null) {
-      this.nextSibling = document.createTextNode('');
-      this.previousSibling.parentNode!.appendChild(this.nextSibling);
-    }
+    const node = document.createTextNode('');
 
-    return new NodeTemplatePart(this.templateInstance, this.rule,
-        this.nextSibling);
+    this.parentNode!.insertBefore(node, this.nextSibling);
+    this.nextSibling = node;
+
+    return new NodeTemplatePart(this.templateInstance, this.rule, node);
   }
 
-  clear() {
+  /**
+   * Creates a new inner part that is enclosed completely by the current
+   * part and returns it. The enclosed part shares the TemplateInstance and the
+   * TemplateRule of the current part.
+   */
+  enclose(): NodeTemplatePart {
+    const node = document.createTextNode('');
+
+    this.parentNode!.insertBefore(node, this.previousSibling.nextSibling);
+
+    return new NodeTemplatePart(this.templateInstance, this.rule, node);
+  }
+
+  relocateTo(node: Node) {
+    const { currentNodes, sourceNode } = this;
+
+    if (sourceNode != null && sourceNode !== node) {
+      this.clear();
+    }
+
+    this.previousSibling = node;
+    this.nextSibling = node.nextSibling;
+    this.sourceNode = node;
+
+    if (currentNodes != null && currentNodes.length) {
+      this.replace(...currentNodes);
+    }
+  }
+
+  // SPECIAL NOTE(cdata): This clear is specialized a la lit-html to accept a
+  // starting node from which to clear. This supports efficient cleanup of
+  // subparts of a part (subparts are also particular to lit-html compared to
+  // Apple's proposal).
+  clear(startNode: Node = this.previousSibling.nextSibling!) {
     if (this.parentNode === null) {
       return;
     }
 
-    let node = this.previousSibling.nextSibling!;
+    let node = startNode;
 
     while (node !== this.nextSibling) {
       const nextNode: Node | null = node.nextSibling;
@@ -140,22 +186,6 @@ export class NodeTemplatePart extends TemplatePart {
   protected appendNode(node: Node) {
     this.parentNode!.insertBefore(node, this.nextSibling);
     this.currentNodes.push(node);
-  }
-
-  protected relocateToNode(node: Node) {
-    const { currentNodes, sourceNode } = this;
-
-    if (sourceNode != null) {
-      this.clear();
-    }
-
-    this.previousSibling = node;
-    this.nextSibling = node.nextSibling;
-    this.sourceNode = node;
-
-    if (currentNodes != null && currentNodes.length) {
-      this.replace(...currentNodes);
-    }
   }
 
   protected applyValue(value: any) {
