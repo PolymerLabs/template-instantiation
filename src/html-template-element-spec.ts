@@ -1,9 +1,11 @@
 import { Spec } from '../../@0xcda7a/test-runner/lib/spec.js';
+import { Fixturable } from
+    '../../@0xcda7a/test-runner/lib/mixins/fixturable.js';
 import '../../chai/chai.js';
 import { ExampleTemplateProcessor } from './example-template-processor.js';
 import './html-template-element.js';
 
-const spec = new Spec();
+const spec = new (Fixturable(Spec))();
 const { describe, it, fixture } = spec;
 const { expect } = chai;
 
@@ -62,4 +64,4 @@ describe('HTMLTemplateElement', () => {
   });
 });
 
-export { spec as htmlTemplateElementSpec };
+export const htmlTemplateElementSpec: Spec = spec;

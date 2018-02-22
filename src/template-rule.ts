@@ -17,3 +17,8 @@ export class AttributeTemplateRule extends TemplateRule {
   }
 }
 
+export class InnerTemplateRule extends NodeTemplateRule {
+  constructor(public nodeIndex: number, public template: HTMLTemplateElement) {
+    super(nodeIndex, template.getAttribute('expression') || '');
+  }
+}

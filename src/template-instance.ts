@@ -1,4 +1,4 @@
-import { TemplateDefinition } from './template-definition.js';
+import { TemplateDefinition, createTreeWalker } from './template-definition.js';
 import { TemplateProcessor } from
     './template-processor.js';
 import {
@@ -13,10 +13,16 @@ import {
 } from './template-rule.js';
 
 export class TemplateInstance extends DocumentFragment {
+  protected createdCallbackInvoked: boolean = false;
   protected previousState: any = null;
   protected parts: TemplatePart[];
 
   update(state?: any) {
+    if (!this.createdCallbackInvoked) {
+      this.processor.createdCallback(this.parts, state);
+      this.createdCallbackInvoked = true;
+    }
+
     this.processor.processCallback(this.parts, state);
     this.previousState = state;
   }
@@ -36,11 +42,7 @@ export class TemplateInstance extends DocumentFragment {
     const { rules } = definition;
     const parts = [];
 
-    const walker = document.createTreeWalker(
-        this,
-        NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
-        null as any,
-        false);
+    const walker = createTreeWalker(this);
 
     let walkerIndex = -1;
 
@@ -66,7 +68,7 @@ export class TemplateInstance extends DocumentFragment {
   // have custom implementations.
   protected createPart(rule: TemplateRule, node: Node): TemplatePart {
     if (rule instanceof AttributeTemplateRule) {
-      return new AttributeTemplatePart(this, rule, node);
+      return new AttributeTemplatePart(this, rule, node as HTMLElement);
     } else if (rule instanceof NodeTemplateRule) {
       return new NodeTemplatePart(this, rule, node);
     }
@@ -74,5 +76,4 @@ export class TemplateInstance extends DocumentFragment {
     throw new Error(`Unknown rule type.`);
   }
 }
-
 

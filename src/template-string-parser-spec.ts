@@ -1,8 +1,10 @@
 import { Spec } from '../../@0xcda7a/test-runner/lib/spec.js';
+import { Fixturable } from
+    '../../@0xcda7a/test-runner/lib/mixins/fixturable.js';
 import '../../chai/chai.js';
 import { parse } from './template-string-parser.js';
 
-const spec = new Spec();
+const spec = new (Fixturable(Spec))();
 const { describe, it } = spec;
 const { expect } = chai;
 
@@ -35,4 +37,4 @@ describe('Template string parsing', () => {
   });
 });
 
-export { spec as templateStringParserSpec };
+export const templateStringParserSpec: Spec = spec;

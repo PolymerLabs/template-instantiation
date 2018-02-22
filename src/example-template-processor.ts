@@ -10,6 +10,8 @@ import {
 } from './template-rule.js';
 
 export class ExampleTemplateProcessor extends TemplateProcessor {
+  createdCallback(_parts: TemplatePart[], _state?: any): void {}
+
   processCallback(parts: TemplatePart[], state?: any): void {
     for (const part of parts) {
       if (part instanceof NodeTemplatePart) {

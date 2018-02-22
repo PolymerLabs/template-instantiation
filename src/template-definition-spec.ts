@@ -1,9 +1,10 @@
 import { Spec } from '../../@0xcda7a/test-runner/lib/spec.js';
+import { Fixturable } from '../../@0xcda7a/test-runner/lib/mixins/fixturable.js';
 import '../../chai/chai.js';
 import { TemplateDefinition } from './template-definition.js';
 import { NodeTemplateRule, AttributeTemplateRule } from './template-rule.js';
 
-const spec = new Spec();
+const spec = new (Fixturable(Spec))();
 const { describe, it, fixture } = spec;
 const { expect } = chai;
 
@@ -103,4 +104,4 @@ prefix {{qux}} suffix
   });
 });
 
-export { spec as templateDefinitionSpec };
+export const templateDefinitionSpec: Spec = spec;

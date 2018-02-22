@@ -10,6 +10,11 @@
     <h1>This is a {{title}} template</h1>
     <input placeholder="{{label}}">
     <p>{{body}}</p>
+    <ul>
+      <template expression="forEach">
+        <li>{{index}}: {{value}}</li>
+      </template>
+    </ul>
     <footer>
       <span>Footer beginning, {{footer}}, footer ending</span>
     </footer>
@@ -17,10 +22,12 @@
 
   <script type="module">
     import './lib/html-template-element.js';
+    import { ExampleTemplateProcessor } from './lib/example-template-processor.js';
 
     const template = document.querySelector('#test');
+    const processor = new ExampleTemplateProcessor();
     const container = document.querySelector('#container');
-    const instance = template.createInstance({
+    const instance = template.createInstance(processor, {
       title: 'FOO',
       label: 'BAR',
       body: 'BAZ',

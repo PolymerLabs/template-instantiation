@@ -4,6 +4,15 @@ import { TemplateInstance } from './template-instance.js';
 
 const templateDefinitionCache: Map<HTMLTemplateElement, TemplateDefinition> = new Map();
 
+declare global {
+  interface HTMLTemplateElement {
+    createInstance(
+        processor: TemplateProcessor,
+        state?: any,
+        overrideDiagramCache?: boolean): TemplateInstance
+  }
+}
+
 HTMLTemplateElement.prototype.createInstance = function(
     processor: TemplateProcessor,
     state?: any,

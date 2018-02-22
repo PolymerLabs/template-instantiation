@@ -2,8 +2,16 @@ import { parse } from './template-string-parser.js';
 import {
   TemplateRule,
   NodeTemplateRule,
-  AttributeTemplateRule
+  AttributeTemplateRule,
+  InnerTemplateRule
 } from './template-rule.js';
+
+// Edge needs all 4 parameters present; IE11 needs 3rd parameter to be null
+export const createTreeWalker = (node: Node) => document.createTreeWalker(
+    node,
+    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+    null as any,
+    false);
 
 export class TemplateDefinition {
   rules: TemplateRule[];
@@ -23,12 +31,7 @@ export class TemplateDefinition {
     const content = template.content.cloneNode(true);
     const rules: TemplateRule[] = [];
 
-    // Edge needs all 4 parameters present; IE11 needs 3rd parameter to be null
-    const walker = document.createTreeWalker(
-        content,
-        NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
-        null as any,
-        false);
+    const walker = createTreeWalker(content);
     let nodeIndex = -1;
 
     while (walker.nextNode()) {
@@ -41,28 +44,35 @@ export class TemplateDefinition {
           continue;
         }
 
-        // TODO(cdata): Inner template nodes handled here...?
+        if (node instanceof HTMLTemplateElement) {
+          const { parentNode } = node;
+          const partNode = document.createTextNode('');
 
-        const { attributes } = node;
+          parentNode!.replaceChild(partNode, node);
 
-        // TODO(cdata): Fix IE/Edge attribute order here
-        // @see https://github.com/Polymer/lit-html/blob/master/src/lit-html.ts#L220-L229
+          rules.push(new InnerTemplateRule(nodeIndex, node));
+        } else {
+          const { attributes } = node;
 
-        for (let i = 0; i < attributes.length;) {
-          const attribute = attributes[i];
-          const { name, value } = attribute;
+          // TODO(cdata): Fix IE/Edge attribute order here
+          // @see https://github.com/Polymer/lit-html/blob/master/src/lit-html.ts#L220-L229
 
-          const [ strings, values ] = parse(value);
+          for (let i = 0; i < attributes.length;) {
+            const attribute = attributes[i];
+            const { name, value } = attribute;
 
-          if (strings.length === 1) {
-            ++i;
-            continue;
+            const [ strings, values ] = parse(value);
+
+            if (strings.length === 1) {
+              ++i;
+              continue;
+            }
+
+            rules.push(new AttributeTemplateRule(
+                nodeIndex, name, strings, values));
+
+            node.removeAttribute(name);
           }
-
-          rules.push(new AttributeTemplateRule(
-              nodeIndex, name, strings, values));
-
-          node.removeAttribute(name);
         }
       } else if (node.nodeType === Node.TEXT_NODE) {
         const [ strings, values ] = parse(node.nodeValue || '');

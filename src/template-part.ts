@@ -5,53 +5,40 @@ import {
   NodeTemplateRule
 } from './template-rule.js';
 
+
+
 export abstract class TemplatePart {
-  protected sourceValue: any = null;
-  protected sourceNode: Node;
+  protected sourceValue: any;
 
-  constructor(public templateInstance: TemplateInstance,
-      public rule: TemplateRule,
-      node: Node) {
-    this.relocateTo(node);
-  }
+  constructor(readonly templateInstance: TemplateInstance,
+      readonly rule: TemplateRule) {}
 
-  get node(): Node {
-    return this.sourceNode;
-  }
-
-  // NOTE(cdata): rniwa calls for this to be the result of concatenating the
-  // textContent of all replacement nodes:
   get value(): any {
     return this.sourceValue;
   }
 
   set value(value: any) {
-    this.sourceValue = value;
-    this.applyValue(value);
-  }
-
-  abstract clear(): void;
-
-  // SPECIAL NOTE(cdata): Parts in this implementation can be "relocated" to
-  // arbitrary positions in a tree.
-  abstract relocateTo(node: Node): void;
-
-  protected abstract applyValue(value: any): void;
-}
-
-export class AttributeTemplatePart extends TemplatePart {
-  rule: AttributeTemplateRule;
-
-  clear() {
-    if (this.node != null) {
-      (this.node as Element).removeAttribute(this.rule.attributeName);
+    if (value !== this.sourceValue) {
+      this.sourceValue = value;
+      this.applyValue(value);
     }
   }
 
-  relocateTo(node: Node) {
-    this.clear();
-    this.sourceNode = node;
-    this.applyValue(this.value);
+  abstract clear(): void;
+  protected abstract applyValue(value: any): void;
+}
+
+
+
+export class AttributeTemplatePart extends TemplatePart {
+  constructor(readonly templateInstance: TemplateInstance,
+      readonly rule: AttributeTemplateRule,
+      readonly element: HTMLElement) {
+    super(templateInstance, rule);
+  }
+
+  clear() {
+    this.element.removeAttribute(this.rule.attributeName);
   }
 
   protected applyValue(value: any) {
@@ -61,8 +48,7 @@ export class AttributeTemplatePart extends TemplatePart {
       value = [value];
     }
 
-    const element = this.node as Element;
-    const { rule } = this;
+    const { rule, element } = this;
     const { strings, attributeName } = rule;
     const valueFragments = [];
 
@@ -81,15 +67,20 @@ export class AttributeTemplatePart extends TemplatePart {
   }
 }
 
-export class NodeTemplatePart extends TemplatePart {
-  rule: NodeTemplateRule;
 
-  currentNodes: Node[] = [];
+
+export class NodeTemplatePart extends TemplatePart {
+  parentNode: Node;
   previousSibling: Node;
   nextSibling: Node | null;
 
-  get parentNode(): Node | null {
-    return this.previousSibling.parentNode;
+  currentNodes: Node[] = [];
+
+  constructor(readonly templateInstance: TemplateInstance,
+      readonly rule: NodeTemplateRule,
+      protected startNode: Node) {
+    super(templateInstance, rule);
+    this.move(startNode);
   }
 
   replace(...nodes: Array<Node | string | NodeTemplatePart>) {
@@ -103,12 +94,12 @@ export class NodeTemplatePart extends TemplatePart {
       }
 
       // SPECIAL NOTE(cdata): This implementation supports NodeTemplatePart as
-      // a replacement node:
+      // a replacement node. Usefulness TBD.
       if (node instanceof NodeTemplatePart) {
         const part = node as NodeTemplatePart;
-        node = part.node;
+        node = part.startNode;
         this.appendNode(node);
-        part.relocateTo(node);
+        part.move(node);
       } else if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
           node.nodeType === Node.DOCUMENT_NODE) {
         // NOTE(cdata): Apple's proposal explicit forbid's document fragments
@@ -147,18 +138,21 @@ export class NodeTemplatePart extends TemplatePart {
     return new NodeTemplatePart(this.templateInstance, this.rule, node);
   }
 
-  relocateTo(node: Node) {
-    const { currentNodes, sourceNode } = this;
+  move(startNode: Node) {
+    const { currentNodes, startNode: currentStartNode } = this;
 
-    if (sourceNode != null && sourceNode !== node) {
+    if (currentStartNode != null &&
+        currentStartNode !== startNode &&
+        currentNodes.length) {
       this.clear();
     }
 
-    this.previousSibling = node;
-    this.nextSibling = node.nextSibling;
-    this.sourceNode = node;
+    this.parentNode = startNode.parentNode!;
+    this.previousSibling = startNode;
+    this.nextSibling = startNode.nextSibling;
+    this.startNode = startNode;
 
-    if (currentNodes != null && currentNodes.length) {
+    if (currentNodes && currentNodes.length) {
       this.replace(...currentNodes);
     }
   }
