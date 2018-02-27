@@ -2,7 +2,8 @@ import { TemplateProcessor } from './template-processor.js';
 import {
   TemplatePart,
   NodeTemplatePart,
-  AttributeTemplatePart
+  AttributeTemplatePart,
+  InnerTemplatePart
 } from './template-part.js';
 import {
   NodeTemplateRule,
@@ -14,7 +15,9 @@ export class ExampleTemplateProcessor extends TemplateProcessor {
 
   processCallback(parts: TemplatePart[], state?: any): void {
     for (const part of parts) {
-      if (part instanceof NodeTemplatePart) {
+      if (part instanceof InnerTemplatePart) {
+        // TODO
+      } else if (part instanceof NodeTemplatePart) {
         const { expression } = part.rule as NodeTemplateRule;
         part.value = state && expression && state[expression];
       } else if (part instanceof AttributeTemplatePart) {

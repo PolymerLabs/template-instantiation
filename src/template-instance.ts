@@ -4,12 +4,14 @@ import { TemplateProcessor } from
 import {
   TemplatePart,
   AttributeTemplatePart,
-  NodeTemplatePart
+  NodeTemplatePart,
+  InnerTemplatePart
 } from './template-part.js';
 import {
   TemplateRule,
   AttributeTemplateRule,
-  NodeTemplateRule
+  NodeTemplateRule,
+  InnerTemplateRule
 } from './template-rule.js';
 
 export class TemplateInstance extends DocumentFragment {
@@ -69,6 +71,8 @@ export class TemplateInstance extends DocumentFragment {
   protected createPart(rule: TemplateRule, node: Node): TemplatePart {
     if (rule instanceof AttributeTemplateRule) {
       return new AttributeTemplatePart(this, rule, node as HTMLElement);
+    } else if (rule instanceof InnerTemplateRule) {
+      return new InnerTemplatePart(this, rule, node);
     } else if (rule instanceof NodeTemplateRule) {
       return new NodeTemplatePart(this, rule, node);
     }

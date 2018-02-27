@@ -2,7 +2,8 @@ import { TemplateInstance } from './template-instance.js';
 import {
   TemplateRule,
   AttributeTemplateRule,
-  NodeTemplateRule
+  NodeTemplateRule,
+  InnerTemplateRule
 } from './template-rule.js';
 
 
@@ -189,6 +190,20 @@ export class NodeTemplatePart extends TemplatePart {
     } else {
       this.replace(document.createTextNode(value));
     }
+  }
+}
+
+
+
+export class InnerTemplatePart extends NodeTemplatePart {
+  constructor(readonly templateInstance: TemplateInstance,
+      readonly rule: InnerTemplateRule,
+      protected startNode: Node) {
+    super(templateInstance, rule, startNode);
+  }
+
+  get template(): HTMLTemplateElement {
+    return this.rule.template;
   }
 }
 
