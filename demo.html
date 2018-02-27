@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  </head>
+  <body>
+
+  <template id="test">
+    <h1>This is a {{title}} template</h1>
+    <input placeholder="{{label}}">
+    <p>{{body}}</p>
+    <ul>
+      <template expression="forEach">
+        <li>{{index}}: {{value}}</li>
+      </template>
+    </ul>
+    <footer>
+      <span>Footer beginning, {{footer}}, footer ending</span>
+    </footer>
+  </template>
+
+  <script type="module">
+    import './lib/html-template-element.js';
+    import { ExampleTemplateProcessor } from './lib/example-template-processor.js';
+
+    const template = document.querySelector('#test');
+    const processor = new ExampleTemplateProcessor();
+    const container = document.querySelector('#container');
+    const instance = template.createInstance(processor, {
+      title: 'FOO',
+      label: 'BAR',
+      body: 'BAZ',
+      footer: 'QUX'
+    });
+
+    container.appendChild(instance);
+
+    setTimeout(function() {
+      instance.update({
+        title: 'FIZ',
+        label: 'BUZ',
+        body: 'LUR',
+        footer: 'VIM'
+      });
+    }, 2000);
+  </script>
+
+  <div id="container"></div>
+</body>
+</html>

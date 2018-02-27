@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  </head>
+  <body>
+
+  <script type="module">
+    import { Suite } from '../@0xcda7a/test-runner/lib/suite.js';
+    import { htmlTemplateElementSpec } from './lib/html-template-element-spec.js';
+    import { templateDefinitionSpec } from './lib/template-definition-spec.js';
+    import { templateStringParserSpec } from './lib/template-string-parser-spec.js';
+
+    const suite = new Suite([
+      htmlTemplateElementSpec,
+      templateDefinitionSpec,
+      templateStringParserSpec,
+    ]);
+
+    suite.run();
+  </script>
+</body>
+</html>
