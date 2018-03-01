@@ -1,6 +1,16 @@
-import { Spec } from '../../@0xcda7a/test-runner/lib/spec.js';
+/**
+ * @license
+ * Copyright (c) 2018 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http:polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http:polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http:polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http:polymer.github.io/PATENTS.txt
+ */
+
+import { Spec } from '../../@polymer/test-runner/lib/spec.js';
 import { Fixturable } from
-    '../../@0xcda7a/test-runner/lib/mixins/fixturable.js';
+    '../../@polymer/test-runner/lib/mixins/fixturable.js';
 import '../../chai/chai.js';
 import { ExampleTemplateProcessor } from './example-template-processor.js';
 import './html-template-element.js';

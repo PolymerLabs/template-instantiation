@@ -1,17 +1,21 @@
 {
-  "name": "template-instantiation",
+  "name": "template-instantiation-prollyfill",
   "version": "0.0.1",
-  "description": "",
-  "main": "lib/html-template-element.js",
+  "description": "A prollyfill for HTML template instantiation",
+  "main": "template-instantiation.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "watch": "tsc -w",
+    "bundle": "rollup -c ./rollup.config.js",
+    "prepublishOnly": "npm run build && npm run bundle"
   },
-  "author": "",
+  "author": "The Polymer Authors",
   "license": "BSD-3-Clause",
   "devDependencies": {
-    "@0xcda7a/test-runner": "0.0.4",
+    "@polymer/test-runner": "~0.0.4",
     "@types/chai": "^4.0.10",
     "chai": "^4.1.2",
+    "rollup": "^0.56.3",
     "typescript": "^2.6.2"
   }
 }
