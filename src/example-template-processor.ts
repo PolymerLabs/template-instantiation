@@ -9,9 +9,7 @@
  */
 
 import { TemplateProcessor } from './template-processor.js';
-import {
-  TemplatePart
-} from './template-part.js';
+import { TemplateInstance } from './template-instance.js';
 import {
   TemplateExpressionKind,
   NodeTemplateExpressionRule,
@@ -19,9 +17,9 @@ import {
 } from './template-expression.js';
 
 export class ExampleTemplateProcessor extends TemplateProcessor {
-  createdCallback(_parts: TemplatePart[], _state?: any): void {}
+  update(templateInstance: TemplateInstance, state?: any): void {
+    const { parts } = templateInstance;
 
-  processCallback(parts: TemplatePart[], state?: any): void {
     for (const part of parts) {
       switch (part.rule.kind) {
         case TemplateExpressionKind.InnerTemplate:

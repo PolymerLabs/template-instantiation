@@ -8,9 +8,9 @@
  * subject to an additional IP rights grant found at http:polymer.github.io/PATENTS.txt
  */
 
-import { TemplateDefinition, createTreeWalker } from './template-definition.js';
-import { TemplateProcessor } from
-    './template-processor.js';
+import { PreparedTemplate } from './prepared-template.js';
+import { createTreeWalker } from
+    './template-tree-walker.js';
 import {
   TemplatePart,
   AttributeTemplatePart,
@@ -25,42 +25,53 @@ import {
   InnerTemplateExpressionRule
 } from './template-expression.js';
 
-export class TemplateInstance extends DocumentFragment {
-  protected createdCallbackInvoked: boolean = false;
+export class TemplateInstance {
+  protected updateInvoked: boolean = false;
   protected previousState: any = null;
-  protected parts: TemplatePart[];
+  protected contentFragment: DocumentFragment | null = null;
+  public parts: TemplatePart[];
 
-  update(state?: any) {
-    if (!this.createdCallbackInvoked) {
-      this.processor.createdCallback(this.parts, state);
-      this.createdCallbackInvoked = true;
+  createContent(): DocumentFragment {
+    if (this.contentFragment != null) {
+      throw new Error('TemplateInstance content can only be created once');
     }
 
-    this.processor.processCallback(this.parts, state);
-    this.previousState = state;
-  }
-
-  constructor(public definition: TemplateDefinition,
-      public processor: TemplateProcessor,
-      state?: any) {
-    super();
-
-    this.appendChild(definition.cloneContent());
+    this.contentFragment = this.preparedTemplate.cloneContent();
     this.generateParts();
-    this.update(state);
+
+    // NOTE(cdata): At this stage, potentially there could be an optimized
+    // expansion of the DOM tree:
+    this.update(this.initialValues);
+
+    return this.contentFragment;
   }
+
+  update(newValues?: any) {
+    const { processor, expressionRules } = this.preparedTemplate;
+    const evaluatedState = processor.evaluate(expressionRules, newValues);
+
+    processor.update(this, evaluatedState);
+
+    this.previousState = evaluatedState;
+  }
+
+  // NOTE(cdata): Initial values are passed to the constructor so that a
+  // nested theoretical nested `TemplateInstace` can be expanded without
+  // knowing what its initial values should be:
+  constructor(public preparedTemplate: PreparedTemplate,
+      protected initialValues?: any) {}
 
   protected generateParts() {
-    const { definition } = this;
-    const { rules } = definition;
+    const { preparedTemplate } = this;
+    const { expressionRules } = preparedTemplate;
     const parts = [];
 
-    const walker = createTreeWalker(this);
+    const walker = createTreeWalker(this.contentFragment!);
 
     let walkerIndex = -1;
 
-    for (let i = 0; i < rules.length; ++i) {
-      const rule = rules[i];
+    for (let i = 0; i < expressionRules.length; ++i) {
+      const rule = expressionRules[i];
       const { nodeIndex } = rule;
 
       while (walkerIndex < nodeIndex) {

@@ -8,11 +8,10 @@
  * subject to an additional IP rights grant found at http:polymer.github.io/PATENTS.txt
  */
 
-import { TemplateDefinition } from './template-definition.js';
 import { TemplateProcessor } from './template-processor.js';
 
 export class TemplateAssembly {
-  constructor(public definition: TemplateDefinition,
+  constructor(public template: HTMLTemplateElement,
       public processor: TemplateProcessor,
       public state?: any) {}
 };
