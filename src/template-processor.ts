@@ -20,6 +20,10 @@ import {
 import { createTreeWalker } from './template-tree-walker.js';
 
 export abstract class TemplateProcessor {
+  // NOTE(cdata): The `prepare` stage represents the default process for
+  // parsing part expressions from a given template. This can be overridden
+  // to extend or replace completely the algorithm for deciding what parts
+  // should be created for a given template.
   prepare(template: HTMLTemplateElement): PreparedTemplate {
     const content = template.content.cloneNode(true);
     const rules: TemplateExpressionRule[] = [];
