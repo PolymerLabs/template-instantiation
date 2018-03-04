@@ -1,8 +1,9 @@
 {
   "name": "template-instantiation-prollyfill",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "A prollyfill for HTML template instantiation",
   "main": "template-instantiation.js",
+  "files": ["lib/*"],
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
