@@ -98,6 +98,9 @@ export abstract class TemplateProcessor {
     return new PreparedTemplate(this, parsedTemplate, rules);
   }
 
+  // NOTE(cdata): The `evaluate` stage receives expressions and input values,
+  // and returns generated state suitable for assigning to the parts that
+  // correspond to those expressions.
   evaluate(_expressionRules: TemplateExpressionRule[], inputValues: any): any {
     return inputValues;
   }
