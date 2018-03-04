@@ -18,11 +18,12 @@ import {
   InnerTemplatePart
 } from './template-part.js';
 import {
-  TemplateRule,
-  AttributeTemplateRule,
-  NodeTemplateRule,
-  InnerTemplateRule
-} from './template-rule.js';
+  TemplateExpressionKind,
+  TemplateExpressionRule,
+  AttributeTemplateExpressionRule,
+  NodeTemplateExpressionRule,
+  InnerTemplateExpressionRule
+} from './template-expression.js';
 
 export class TemplateInstance extends DocumentFragment {
   protected createdCallbackInvoked: boolean = false;
@@ -78,13 +79,17 @@ export class TemplateInstance extends DocumentFragment {
   // NOTE(cdata): In the original pass, this was exposed in the
   // TemplateProcessor to be optionally overridden so that parts could
   // have custom implementations.
-  protected createPart(rule: TemplateRule, node: Node): TemplatePart {
-    if (rule instanceof AttributeTemplateRule) {
-      return new AttributeTemplatePart(this, rule, node as HTMLElement);
-    } else if (rule instanceof InnerTemplateRule) {
-      return new InnerTemplatePart(this, rule, node);
-    } else if (rule instanceof NodeTemplateRule) {
-      return new NodeTemplatePart(this, rule, node);
+  protected createPart(rule: TemplateExpressionRule, node: Node): TemplatePart {
+    switch (rule.kind) {
+      case TemplateExpressionKind.Attribute:
+        return new AttributeTemplatePart(this,
+            rule as AttributeTemplateExpressionRule, node as HTMLElement);
+      case TemplateExpressionKind.InnerTemplate:
+        return new InnerTemplatePart(this,
+            rule as InnerTemplateExpressionRule, node);
+      case TemplateExpressionKind.Node:
+        return new NodeTemplatePart(this,
+            rule as NodeTemplateExpressionRule, node);
     }
 
     throw new Error(`Unknown rule type.`);

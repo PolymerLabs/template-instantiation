@@ -12,7 +12,10 @@ import { Spec } from '../../@polymer/test-runner/lib/spec.js';
 import { Fixturable } from '../../@polymer/test-runner/lib/mixins/fixturable.js';
 import '../../chai/chai.js';
 import { TemplateDefinition } from './template-definition.js';
-import { NodeTemplateRule, AttributeTemplateRule } from './template-rule.js';
+import {
+  NodeTemplateExpressionRule,
+  AttributeTemplateExpressionRule
+} from './template-expression.js';
 
 const spec = new (Fixturable(Spec))();
 const { describe, it, fixture } = spec;
@@ -48,7 +51,7 @@ describe('TemplateDefinition', () => {
     it('generates a node sentinel', (context: any) => {
       const { definition } = context;
       expect(definition.rules.length).to.be.equal(1);
-      expect(definition.rules[0]).to.be.instanceof(NodeTemplateRule);
+      expect(definition.rules[0]).to.be.instanceof(NodeTemplateExpressionRule);
     });
   });
 
@@ -65,7 +68,8 @@ describe('TemplateDefinition', () => {
     it('generates an attribute sentinel', (context: any) => {
       const { definition } = context;
       expect(definition.rules.length).to.be.equal(1);
-      expect(definition.rules[0]).to.be.instanceof(AttributeTemplateRule);
+      expect(definition.rules[0]).to.be
+          .instanceof(AttributeTemplateExpressionRule);
     });
   });
 
@@ -96,19 +100,19 @@ prefix {{qux}} suffix
       const { rules } = definition;
       const [ bar, baz, qux, rak, lur ] = rules;
 
-      expect(bar).to.be.instanceof(AttributeTemplateRule);
+      expect(bar).to.be.instanceof(AttributeTemplateExpressionRule);
       expect(bar.expressions).to.be.eql(['bar']);
 
-      expect(baz).to.be.instanceof(NodeTemplateRule);
+      expect(baz).to.be.instanceof(NodeTemplateExpressionRule);
       expect(baz.expression).to.be.equal('baz');
 
-      expect(qux).to.be.instanceof(NodeTemplateRule);
+      expect(qux).to.be.instanceof(NodeTemplateExpressionRule);
       expect(qux.expression).to.be.equal('qux');
 
-      expect(rak).to.be.instanceof(AttributeTemplateRule);
+      expect(rak).to.be.instanceof(AttributeTemplateExpressionRule);
       expect(rak.expressions).to.be.eql(['rak']);
 
-      expect(lur).to.be.instanceof(NodeTemplateRule);
+      expect(lur).to.be.instanceof(NodeTemplateExpressionRule);
       expect(lur.expression).to.be.eql('lur');
     });
   });

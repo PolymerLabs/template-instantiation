@@ -10,11 +10,11 @@
 
 import { parse } from './template-string-parser.js';
 import {
-  TemplateRule,
-  NodeTemplateRule,
-  AttributeTemplateRule,
-  InnerTemplateRule
-} from './template-rule.js';
+  TemplateExpressionRule,
+  NodeTemplateExpressionRule,
+  AttributeTemplateExpressionRule,
+  InnerTemplateExpressionRule
+} from './template-expression.js';
 
 // Edge needs all 4 parameters present; IE11 needs 3rd parameter to be null
 export const createTreeWalker = (node: Node) => document.createTreeWalker(
@@ -24,22 +24,22 @@ export const createTreeWalker = (node: Node) => document.createTreeWalker(
     false);
 
 export class TemplateDefinition {
-  rules: TemplateRule[];
+  rules: TemplateExpressionRule[];
 
   parsedTemplate: HTMLTemplateElement;
 
   constructor(public template: HTMLTemplateElement) {
-    this.parseAndGenerateRules();
+    this.parseAndGenerateExpressionRules();
   }
 
   cloneContent() {
     return this.parsedTemplate.content.cloneNode(true);
   }
 
-  protected parseAndGenerateRules() {
+  protected parseAndGenerateExpressionRules() {
     const { template } = this;
     const content = template.content.cloneNode(true);
-    const rules: TemplateRule[] = [];
+    const rules: TemplateExpressionRule[] = [];
 
     const walker = createTreeWalker(content);
     let nodeIndex = -1;
@@ -60,7 +60,7 @@ export class TemplateDefinition {
 
           parentNode!.replaceChild(partNode, node);
 
-          rules.push(new InnerTemplateRule(nodeIndex, node));
+          rules.push(new InnerTemplateExpressionRule(nodeIndex, node));
         } else {
           const { attributes } = node;
 
@@ -78,7 +78,7 @@ export class TemplateDefinition {
               continue;
             }
 
-            rules.push(new AttributeTemplateRule(
+            rules.push(new AttributeTemplateExpressionRule(
                 nodeIndex, name, strings, values));
 
             node.removeAttribute(name);
@@ -98,7 +98,7 @@ export class TemplateDefinition {
 
           // @see https://github.com/Polymer/lit-html/blob/master/src/lit-html.ts#L267-L272
           parentNode!.insertBefore(partNode, node);
-          rules.push(new NodeTemplateRule(nodeIndex++, values[i]));
+          rules.push(new NodeTemplateExpressionRule(nodeIndex++, values[i]));
         }
 
         node.nodeValue = strings[strings.length - 1];
