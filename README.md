@@ -8,7 +8,7 @@ found [here](https://github.com/w3c/webcomponents/blob/gh-pages/proposals/Templa
 
 This change proposes a Template Instantiation prollyfill implementation based
 on Ryosuke Niwa's proposal, and adapted with idioms and features found in
-the Polymer Team's own [lit-html](github.com/polymerlabs/lit-html).
+the Polymer Team's own [lit-html](https://github.com/polymerlabs/lit-html).
 
 ## Concepts and Domain
 
