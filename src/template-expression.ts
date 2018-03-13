@@ -8,17 +8,29 @@
  * subject to an additional IP rights grant found at http:polymer.github.io/PATENTS.txt
  */
 
-export class TemplateRule {
+export enum TemplateExpressionKind {
+  Node = 0,
+  Attribute = 1,
+  InnerTemplate = 2
+};
+
+export class TemplateExpressionRule {
+  readonly kind: TemplateExpressionKind;
+
   constructor(public nodeIndex: number) {}
 }
 
-export class NodeTemplateRule extends TemplateRule {
+export class NodeTemplateExpressionRule extends TemplateExpressionRule {
+  readonly kind: TemplateExpressionKind = TemplateExpressionKind.Node;
+
   constructor(public nodeIndex: number, public expression: string) {
     super(nodeIndex);
   }
 }
 
-export class AttributeTemplateRule extends TemplateRule {
+export class AttributeTemplateExpressionRule extends TemplateExpressionRule {
+  readonly kind: TemplateExpressionKind = TemplateExpressionKind.Attribute;
+
   constructor(public nodeIndex: number,
       public attributeName: string,
       public strings: string[],
@@ -27,7 +39,9 @@ export class AttributeTemplateRule extends TemplateRule {
   }
 }
 
-export class InnerTemplateRule extends NodeTemplateRule {
+export class InnerTemplateExpressionRule extends NodeTemplateExpressionRule {
+  readonly kind: TemplateExpressionKind = TemplateExpressionKind.InnerTemplate;
+
   constructor(public nodeIndex: number, public template: HTMLTemplateElement) {
     super(nodeIndex, template.getAttribute('expression') || '');
   }

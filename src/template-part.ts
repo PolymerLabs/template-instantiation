@@ -10,11 +10,11 @@
 
 import { TemplateInstance } from './template-instance.js';
 import {
-  TemplateRule,
-  AttributeTemplateRule,
-  NodeTemplateRule,
-  InnerTemplateRule
-} from './template-rule.js';
+  TemplateExpressionRule,
+  AttributeTemplateExpressionRule,
+  NodeTemplateExpressionRule,
+  InnerTemplateExpressionRule
+} from './template-expression.js';
 
 
 
@@ -22,7 +22,7 @@ export abstract class TemplatePart {
   protected sourceValue: any;
 
   constructor(readonly templateInstance: TemplateInstance,
-      readonly rule: TemplateRule) {}
+      readonly rule: TemplateExpressionRule) {}
 
   get value(): any {
     return this.sourceValue;
@@ -43,7 +43,7 @@ export abstract class TemplatePart {
 
 export class AttributeTemplatePart extends TemplatePart {
   constructor(readonly templateInstance: TemplateInstance,
-      readonly rule: AttributeTemplateRule,
+      readonly rule: AttributeTemplateExpressionRule,
       readonly element: HTMLElement) {
     super(templateInstance, rule);
   }
@@ -88,7 +88,7 @@ export class NodeTemplatePart extends TemplatePart {
   currentNodes: Node[] = [];
 
   constructor(readonly templateInstance: TemplateInstance,
-      readonly rule: NodeTemplateRule,
+      readonly rule: NodeTemplateExpressionRule,
       protected startNode: Node) {
     super(templateInstance, rule);
     this.move(startNode);
@@ -125,7 +125,7 @@ export class NodeTemplatePart extends TemplatePart {
   /**
    * Forks the current part, inserting a new part after the current one and
    * returning it. The forked part shares the TemplateInstance and the
-   * TemplateRule of the current part.
+   * TemplateExpressionRule of the current part.
    */
   fork(): NodeTemplatePart {
     const node = document.createTextNode('');
@@ -139,7 +139,7 @@ export class NodeTemplatePart extends TemplatePart {
   /**
    * Creates a new inner part that is enclosed completely by the current
    * part and returns it. The enclosed part shares the TemplateInstance and the
-   * TemplateRule of the current part.
+   * TemplateExpressionRule of the current part.
    */
   enclose(): NodeTemplatePart {
     const node = document.createTextNode('');
@@ -207,7 +207,7 @@ export class NodeTemplatePart extends TemplatePart {
 
 export class InnerTemplatePart extends NodeTemplatePart {
   constructor(readonly templateInstance: TemplateInstance,
-      readonly rule: InnerTemplateRule,
+      readonly rule: InnerTemplateExpressionRule,
       protected startNode: Node) {
     super(templateInstance, rule, startNode);
   }

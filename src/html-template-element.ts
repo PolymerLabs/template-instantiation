@@ -9,10 +9,13 @@
  */
 
 import { TemplateProcessor } from './template-processor.js';
-import { TemplateDefinition } from './template-definition.js';
+import { PreparedTemplate } from './prepared-template.js';
 import { TemplateInstance } from './template-instance.js';
 
-const templateDefinitionCache: Map<HTMLTemplateElement, TemplateDefinition> = new Map();
+type PreparedTemplateCache = Map<TemplateProcessor, PreparedTemplate>;
+
+const templateProcessorCache =
+    new Map<HTMLTemplateElement, PreparedTemplateCache>();
 
 declare global {
   interface HTMLTemplateElement {
@@ -24,18 +27,26 @@ declare global {
 }
 
 HTMLTemplateElement.prototype.createInstance = function(
-    processor: TemplateProcessor,
-    state?: any,
-    overrideDefinitionCache = false): TemplateInstance {
+    processor: TemplateProcessor, initialValues?: any): TemplateInstance {
   if (processor == null) {
-    throw new Error('The first argument of createInstance must be an implementation of TemplateProcessor');
+    throw new Error('A processor is required in order to create a TemplateInstance');
   }
 
-  if (!templateDefinitionCache.has(this) || overrideDefinitionCache) {
-    templateDefinitionCache.set(this, new TemplateDefinition(this));
+  let preparedTemplateCache = templateProcessorCache.get(this);
+  let preparedTemplate: PreparedTemplate | undefined = preparedTemplateCache
+      ? preparedTemplateCache.get(processor)
+      : undefined;
+
+  if (preparedTemplate == null) {
+    if (preparedTemplateCache == null) {
+      preparedTemplateCache = new Map<TemplateProcessor, PreparedTemplate>();
+      templateProcessorCache.set(this, preparedTemplateCache);
+    }
+
+    preparedTemplate = processor.prepare(this);
+
+    preparedTemplateCache.set(processor, preparedTemplate);
   }
 
-  const definition = templateDefinitionCache.get(this)!;
-
-  return new TemplateInstance(definition, processor, state);
+  return new TemplateInstance(preparedTemplate, initialValues);
 };
