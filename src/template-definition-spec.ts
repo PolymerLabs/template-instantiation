@@ -8,8 +8,8 @@
  * subject to an additional IP rights grant found at http:polymer.github.io/PATENTS.txt
  */
 
-import { Spec } from '../../@polymer/test-runner/lib/spec.js';
-import { Fixturable } from '../../@polymer/test-runner/lib/mixins/fixturable.js';
+import { Spec } from '../../@polymer/ristretto/lib/spec.js';
+import { Fixturable } from '../../@polymer/ristretto/lib/mixins/fixturable.js';
 import '../../chai/chai.js';
 import { TemplateDefinition } from './template-definition.js';
 import { NodeTemplateRule, AttributeTemplateRule } from './template-rule.js';
