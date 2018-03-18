@@ -3,7 +3,9 @@
   "version": "0.0.3",
   "description": "A prollyfill for HTML template instantiation",
   "main": "template-instantiation.js",
-  "files": ["lib/*"],
+  "files": [
+    "lib/*"
+  ],
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
@@ -13,9 +15,10 @@
   "author": "The Polymer Authors",
   "license": "BSD-3-Clause",
   "devDependencies": {
-    "@polymer/test-runner": "~0.0.4",
+    "@polymer/ristretto": "^0.3.1",
     "@types/chai": "^4.0.10",
     "chai": "^4.1.2",
+    "polyserve": "^0.24.0",
     "rollup": "^0.56.3",
     "typescript": "^2.6.2"
   }

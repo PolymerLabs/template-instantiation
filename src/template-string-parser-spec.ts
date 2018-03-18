@@ -8,9 +8,9 @@
  * subject to an additional IP rights grant found at http:polymer.github.io/PATENTS.txt
  */
 
-import { Spec } from '../../@polymer/test-runner/lib/spec.js';
+import { Spec } from '../../@polymer/ristretto/lib/spec.js';
 import { Fixturable } from
-    '../../@polymer/test-runner/lib/mixins/fixturable.js';
+    '../../@polymer/ristretto/lib/mixins/fixturable.js';
 import '../../chai/chai.js';
 import { parse } from './template-string-parser.js';
 
